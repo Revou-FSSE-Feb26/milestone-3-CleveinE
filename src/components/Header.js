@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 import AnnouncementBar from "./AnnouncementBar";
 
 const navLinks = [
@@ -22,6 +23,13 @@ const categoryLinks = [
 export default function Header() {
   const pathname = usePathname();
   const { cartCount } = useCart();
+  const { user, logout, isLoaded } = useAuth();
+  const router = useRouter();
+
+  function handleLogout() {
+    logout();
+    router.push("/");
+  }
 
   return (
     <header className="sticky top-0 z-50">
@@ -30,8 +38,24 @@ export default function Header() {
       <div className="border-b border-zinc-800 bg-[#0a0a0f]/95 backdrop-blur-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-end px-4 py-2 text-xs text-zinc-500 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4">
-            <span className="cursor-pointer hover:text-blue-500">Masuk</span>
-            <span className="cursor-pointer hover:text-blue-500">Daftar</span>
+            {isLoaded && user ? (
+              <>
+                <Link href="/admin" className="hover:text-blue-500">
+                  Admin
+                </Link>
+                <span className="text-zinc-400">Halo, {user.name?.firstname || "User"}</span>
+                <button onClick={handleLogout} className="hover:text-blue-500">
+                  Keluar
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="hover:text-blue-500">
+                  Masuk
+                </Link>
+                <span className="cursor-not-allowed">Daftar</span>
+              </>
+            )}
           </div>
         </div>
       </div>

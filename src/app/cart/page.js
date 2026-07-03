@@ -100,9 +100,12 @@ export default function CartPage() {
             ✓ Kamu mendapat gratis ongkir!
           </p>
         )}
-        <button className="mt-6 w-full rounded-lg bg-amber-400 py-3 text-sm font-semibold text-zinc-950 transition-colors hover:bg-amber-300">
-          Lanjut ke Checkout
-        </button>
+        <Link
+              href="/checkout"
+              className="mt-6 block w-full rounded-lg bg-blue-500 py-3 text-center text-sm font-semibold text-zinc-950 transition-colors hover:bg-blue-600"
+            >
+              Lanjut ke Checkout
+            </Link>
       </div>
     </div>
   );

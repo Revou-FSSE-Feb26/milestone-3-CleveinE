@@ -1,37 +1,64 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  getProductById,
-  formatPrice,
-  getDiscountPercent,
-  products,
-} from "@/data/products";
+import { formatPrice, getDiscountPercent } from "@/data/products";
 import AddToCartButton from "@/components/AddToCartButton";
 
-export async function generateStaticParams() {
-  return products.map((product) => ({ id: product.id }));
-}
+export default function ProductDetailPage({ params }) {
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const { id } = params;
 
-export async function generateMetadata({ params }) {
-  const { id } = await params;
-  const product = getProductById(id);
-  if (!product) return { title: "Produk Tidak Ditemukan — RevoShop" };
-  return {
-    title: `${product.brand} ${product.name} — RevoShop`,
-    description: product.description,
-  };
-}
+  useEffect(() => {
+    async function fetchProduct() {
+      try {
+        const res = await fetch(`/api/products/${id}`);
+        if (!res.ok) {
+          notFound();
+        }
+        const data = await res.json();
+        setProduct({
+          ...data,
+          name: data.title,
+          brand: data.category.split("'")[0] || "Brand",
+          movement: "Quartz",
+          waterResist: "50m",
+          gender: "unisex",
+        });
+      } catch (error) {
+        console.error("Failed to fetch product:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    if (id) {
+      fetchProduct();
+    }
+  }, [id]);
 
-export default async function ProductDetailPage({ params }) {
-  const { id } = await params;
-  const product = getProductById(id);
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
+          <div className="aspect-square rounded-2xl bg-zinc-900 animate-pulse"></div>
+          <div className="space-y-4">
+            <div className="h-6 w-24 rounded-lg bg-zinc-800 animate-pulse"></div>
+            <div className="h-10 w-3/4 rounded-lg bg-zinc-800 animate-pulse"></div>
+            <div className="h-8 w-32 rounded-lg bg-zinc-800 animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     notFound();
   }
 
-  const discount = getDiscountPercent(product.price, product.originalPrice);
+  const discount = 0;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -71,11 +98,6 @@ export default async function ProductDetailPage({ params }) {
               -{discount}%
             </span>
           )}
-          {product.badge && (
-            <span className="absolute right-4 top-4 rounded-full bg-blue-500 px-4 py-1.5 text-sm font-semibold text-zinc-950">
-              {product.badge}
-            </span>
-          )}
         </div>
 
         <div className="flex flex-col">
@@ -90,11 +112,6 @@ export default async function ProductDetailPage({ params }) {
             <p className="text-3xl font-bold text-blue-500">
               {formatPrice(product.price)}
             </p>
-            {product.originalPrice > product.price && (
-              <p className="text-lg text-zinc-500 line-through">
-                {formatPrice(product.originalPrice)}
-              </p>
-            )}
           </div>
 
           <span className="mt-2 inline-block w-fit rounded bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-500">

@@ -1,9 +1,55 @@
+"use client";
+
+import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
-import { Suspense } from "react";
-import { products } from "@/data/products";
 import BenefitsSection from "@/components/BenefitsSection";
 import BrandScroller from "@/components/BrandScroller";
 import ProductListing from "@/components/ProductListing";
+
+function ProductListingFallback() {
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div className="h-8 w-64 rounded-lg bg-zinc-800 animate-pulse"></div>
+      </div>
+      <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="h-80 rounded-xl bg-zinc-900 animate-pulse"></div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ProductContent() {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await fetch("/api/products");
+        const data = await res.json();
+        setProducts(data.map(p => ({
+          ...p,
+          name: p.title,
+          brand: p.category.split("'")[0] || "Brand",
+        })));
+      } catch (error) {
+        console.error("Failed to fetch products:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return <ProductListingFallback />;
+  }
+
+  return <ProductListing products={products} />;
+}
 
 export default function Home() {
   return (
@@ -59,8 +105,8 @@ export default function Home() {
 
       <BrandScroller />
       <BenefitsSection />
-      <Suspense fallback={<div className="py-12 text-center text-zinc-400">Memuat produk...</div>}>
-        <ProductListing products={products} />
+      <Suspense fallback={<ProductListingFallback />}>
+        <ProductContent />
       </Suspense>
     </div>
   );
