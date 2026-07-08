@@ -18,6 +18,7 @@ export default function AdminPage() {
   const router = useRouter();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -31,7 +32,7 @@ export default function AdminPage() {
   useEffect(() => {
     if (isLoaded && !user) {
       router.push("/login");
-    } else if (isLoaded) {
+    } else if (isLoaded && user) {
       fetchProducts();
     }
   }, [isLoaded, user, router]);
@@ -39,10 +40,11 @@ export default function AdminPage() {
   async function fetchProducts() {
     try {
       const res = await fetch("/api/products");
+      if (!res.ok) throw new Error("Failed to fetch products");
       const data = await res.json();
       setProducts(data);
-    } catch (error) {
-      console.error("Failed to fetch products", error);
+    } catch (err) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -52,7 +54,7 @@ export default function AdminPage() {
     e.preventDefault();
     try {
       if (editingProduct) {
-        await fetch(`/api/products/${editingProduct.id}`, {
+        const res = await fetch(`/api/products/${editingProduct.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -63,8 +65,9 @@ export default function AdminPage() {
             image: formData.image
           })
         });
+        if (!res.ok) throw new Error("Failed to update product");
       } else {
-        await fetch("/api/products", {
+        const res = await fetch("/api/products", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -75,21 +78,23 @@ export default function AdminPage() {
             image: formData.image
           })
         });
+        if (!res.ok) throw new Error("Failed to create product");
       }
       resetForm();
       fetchProducts();
-    } catch (error) {
-      console.error("Failed to save product", error);
+    } catch (err) {
+      alert(err.message);
     }
   }
 
   async function handleDelete(id) {
     if (!confirm("Yakin ingin menghapus produk ini?")) return;
     try {
-      await fetch(`/api/products/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/products/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete product");
       fetchProducts();
-    } catch (error) {
-      console.error("Failed to delete product", error);
+    } catch (err) {
+      alert(err.message);
     }
   }
 
@@ -115,6 +120,17 @@ export default function AdminPage() {
     return (
       <div className="mx-auto max-w-7xl px-4 py-20 text-center text-zinc-400 sm:px-6 lg:px-8">
         Memuat...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 text-center">
+        <p className="text-red-400 mb-4">Gagal memuat produk: {error}</p>
+        <button onClick={() => window.location.reload()} className="px-4 py-2 rounded-lg bg-blue-500 text-zinc-950 font-semibold">
+          Coba lagi
+        </button>
       </div>
     );
   }

@@ -122,16 +122,6 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - Username: `mor_2314`
 - Password: `83r5^_`
 
-## Deploy on Vercel
-
-1. Push the project to GitHub
-2. Import the repository at [vercel.com/new](https://vercel.com/new)
-3. Deploy — no extra configuration needed
-
-## Screenshots
-
-_Add screenshots of the home page, product detail, cart, login, checkout, and admin dashboard here after running locally._
-
 ## Author
 
-Revo U — Milestone 3 Assignment
+Calvin Marcellino

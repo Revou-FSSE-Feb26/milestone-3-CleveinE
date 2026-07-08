@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { formatPrice, getDiscountPercent } from "@/data/products";
+import { formatPrice } from "@/data/products";
 import AddToCartButton from "@/components/AddToCartButton";
 
 export default function ProductDetailPage({ params }) {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { id } = params;
 
   useEffect(() => {
@@ -17,7 +18,10 @@ export default function ProductDetailPage({ params }) {
       try {
         const res = await fetch(`/api/products/${id}`);
         if (!res.ok) {
-          notFound();
+          if (res.status === 404) {
+            notFound();
+          }
+          throw new Error("Failed to fetch product");
         }
         const data = await res.json();
         setProduct({
@@ -28,8 +32,8 @@ export default function ProductDetailPage({ params }) {
           waterResist: "50m",
           gender: "unisex",
         });
-      } catch (error) {
-        console.error("Failed to fetch product:", error);
+      } catch (err) {
+        setError(err.message);
       } finally {
         setLoading(false);
       }
@@ -50,6 +54,17 @@ export default function ProductDetailPage({ params }) {
             <div className="h-8 w-32 rounded-lg bg-zinc-800 animate-pulse"></div>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 text-center">
+        <p className="text-red-400 mb-4">Gagal memuat produk: {error}</p>
+        <button onClick={() => window.location.reload()} className="px-4 py-2 rounded-lg bg-blue-500 text-zinc-950 font-semibold">
+          Coba lagi
+        </button>
       </div>
     );
   }

@@ -1,10 +1,8 @@
-"use client";
-
-import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import BenefitsSection from "@/components/BenefitsSection";
 import BrandScroller from "@/components/BrandScroller";
-import ProductListing from "@/components/ProductListing";
+import ProductContent from "@/components/ProductContent";
+import { Suspense } from "react";
 
 function ProductListingFallback() {
   return (
@@ -19,36 +17,6 @@ function ProductListingFallback() {
       </div>
     </div>
   );
-}
-
-function ProductContent() {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const res = await fetch("/api/products");
-        const data = await res.json();
-        setProducts(data.map(p => ({
-          ...p,
-          name: p.title,
-          brand: p.category.split("'")[0] || "Brand",
-        })));
-      } catch (error) {
-        console.error("Failed to fetch products:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-  }, []);
-
-  if (loading) {
-    return <ProductListingFallback />;
-  }
-
-  return <ProductListing products={products} />;
 }
 
 export default function Home() {

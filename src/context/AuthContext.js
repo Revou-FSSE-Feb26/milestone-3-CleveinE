@@ -9,53 +9,49 @@ export function AuthProvider({ children }) {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("revoshop-user");
-    if (saved) {
+    async function checkAuth() {
       try {
-        setUser(JSON.parse(saved));
-      } catch {
+        const res = await fetch("/api/auth/checkme");
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data.user);
+        }
+      } catch (e) {
         setUser(null);
+      } finally {
+        setIsLoaded(true);
       }
     }
-    setIsLoaded(true);
+    checkAuth();
   }, []);
-
-  useEffect(() => {
-    if (isLoaded) {
-      if (user) {
-        localStorage.setItem("revoshop-user", JSON.stringify(user));
-      } else {
-        localStorage.removeItem("revoshop-user");
-      }
-    }
-  }, [user, isLoaded]);
 
   async function login(username, password) {
     try {
-      const res = await fetch("https://fakestoreapi.com/auth/login", {
+      const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
-      if (!res.ok) throw new Error("Login failed");
-      const data = await res.json();
 
-      const userRes = await fetch(`https://fakestoreapi.com/users`);
-      const users = await userRes.json();
-      const foundUser = users.find(u => u.username === username);
-
-      if (foundUser) {
-        setUser({ ...foundUser, token: data.token });
-        return { success: true };
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Login failed");
       }
-      throw new Error("User not found");
+
+      const data = await res.json();
+      setUser(data.user);
+      return { success: true };
     } catch (error) {
       return { success: false, error: error.message };
     }
   }
 
-  function logout() {
-    setUser(null);
+  async function logout() {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } finally {
+      setUser(null);
+    }
   }
 
   return (
